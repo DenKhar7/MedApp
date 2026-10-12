@@ -1,6 +1,6 @@
 # MedApp
 
-An Android app to track daily medication, built on top of a self-hostable API serving the official French medicines database (ANSM / RUIM). Born as a five-person university project (Scrum, 2025–26), now maintained as an open-source portfolio piece.
+An Android app to track daily medication, built on top of a self-hostable API serving the official French medicines database (ANSM / RUIM). Born as a five-person university project (Scrum, 2025 - 2026), now maintained as an open-source portfolio piece.
 
 > **Disclaimer** – MedApp is an educational project, not a medical device. It does not give medical advice. Always follow your doctor's and pharmacist's instructions.
 
