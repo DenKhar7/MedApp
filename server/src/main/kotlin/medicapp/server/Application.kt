@@ -15,6 +15,7 @@ import io.ktor.server.request.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import medicapp.server.config.configureDatabases
 import medicapp.server.config.loadApiConfig
 import medicapp.server.config.loadStorageConfig
@@ -171,6 +172,17 @@ fun Application.module(
         val orchestrator = ReferentielUpdateOrchestrator(storageConfig)
 
         val jobs = ReferentielJobs(orchestrator)
+
+        // Premier remplissage de la base sans attendre 0h/8h : RUN_JOBS_ON_START=true, puis le remettre à false.
+        if (System.getenv("RUN_JOBS_ON_START") == "true") {
+            monitor.subscribe(ApplicationStarted) {
+                jobScope.launch {
+                    println("[Scheduler] RUN_JOBS_ON_START : exécution immédiate des imports")
+                    jobs.updateSmsJob()
+                    jobs.updateRuimJob()
+                }
+            }
+        }
 
         monitor.subscribe(ApplicationStarted) {
 

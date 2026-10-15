@@ -38,6 +38,7 @@ services:
       API_HOST: ${API_HOST}
       API_PORT: ${API_PORT}
       API_SCHEME: ${API_SCHEME}
+      RUN_JOBS_ON_START: ${RUN_JOBS_ON_START:-false}
     healthcheck:
       # CMD-SHELL : l'exécution directe (CMD) n'expanse pas les variables d'environnement.
       # /health vérifie aussi que la base répond (503 sinon).
