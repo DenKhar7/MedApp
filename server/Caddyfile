@@ -1,3 +1,12 @@
 {$API_DOMAIN} {
-	reverse_proxy server:{$API_PORT}
+	# APK de l'application : déposer le fichier dans ~/medapp/server/downloads/ sur le VPS
+	handle_path /download/* {
+		root * /srv/downloads
+		header Content-Type application/vnd.android.package-archive
+		file_server
+	}
+
+	handle {
+		reverse_proxy server:{$API_PORT}
+	}
 }

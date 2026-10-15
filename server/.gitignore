@@ -34,3 +34,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# APK servi par Caddy (déposé à la main sur le VPS)
+downloads/

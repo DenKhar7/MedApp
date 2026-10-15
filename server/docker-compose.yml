@@ -61,6 +61,7 @@ services:
       API_PORT: ${API_PORT}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./downloads:/srv/downloads:ro
       - caddy_data:/data
     networks:
       - backend
