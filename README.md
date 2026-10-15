@@ -1,118 +1,120 @@
 # MedApp
 
-An Android app to track daily medication, built on top of a self-hostable API serving the official French medicines database (ANSM / RUIM). Born as a five-person university project (Scrum, 2025 - 2026), now maintained as an open-source portfolio piece.
+Application Android de suivi des médicaments au quotidien, construite autour d'une API que l'on peut héberger soi-même et qui sert la base de données officielle des médicaments français (ANSM / RUIM). Projet universitaire réalisé à cinq (Scrum, 2025-2026), ensuite repris comme projet personnel open source.
 
-> **Disclaimer** – MedApp is an educational project, not a medical device. It does not give medical advice. Always follow your doctor's and pharmacist's instructions.
+> **Avertissement :** MedApp est un projet pédagogique, pas un dispositif médical. Il ne donne aucun avis médical. Suivez toujours les consignes de votre médecin et de votre pharmacien.
 
-## Try it on your phone
+## Essayer l'application sur un téléphone
 
-**[⬇ Download the latest APK](https://github.com/DenKhar7/medapp/releases/latest/download/medapp.apk)** · or scan:
+[Télécharger la dernière version (APK)](https://github.com/DenKhar7/medapp/releases/latest/download/medapp.apk), ou scanner ce code :
 
-<img src="docs/qr-apk.png" alt="QR code to download MedApp" width="160">
+<img src="docs/qr-apk.png" alt="Code QR de téléchargement de MedApp" width="160">
 
-- Requires **Android 12 or newer**.
-- Android may show a Play Protect warning ("app not seen from this developer"): tap **More details → Install anyway**. The APK is signed with the project's own key and is not distributed through Google Play.
-- Medicine search talks to the live API at `https://vps.denkhar.com`; accounts and treatments stay on your device.
-- All releases: [GitHub Releases](https://github.com/DenKhar7/medapp/releases).
+- Android 12 ou plus récent est nécessaire.
+- Android peut afficher un avertissement de Play Protect (« application d'un développeur inconnu ») : touchez « Plus de détails », puis « Installer quand même ». L'APK est signé avec la clé du projet et n'est pas distribué par Google Play.
+- La recherche de médicaments utilise l'API en ligne `https://vps.denkhar.com`. Les comptes et les traitements restent sur votre appareil.
+- Toutes les versions : [Releases GitHub](https://github.com/DenKhar7/medapp/releases).
 
-<!-- Demo video: add here -->
+<!-- Vidéo de démonstration : à ajouter ici -->
 
-## What it does
+## Fonctionnalités
 
-- **Daily checklist & calendar** – see what to take today, and which days were completed or missed.
-- **Treatments** – dosage, date range, weekly recurrence, several reminders per day.
-- **Reminders** – exact-time notifications with *Taken* / *Snooze 15 min* actions, rescheduled after reboot.
-- **Medicine search** – search the official database by name, with results cached on the phone.
-- **Prescriptions** – manual entry or document scan with on-device OCR (ML Kit).
-- **Family profiles** – one account, several people, separate data.
-- **English / French.**
+- **Liste du jour et calendrier :** ce qu'il faut prendre aujourd'hui, et les jours complétés ou manqués.
+- **Traitements :** posologie, période, récurrence hebdomadaire, plusieurs rappels par jour.
+- **Rappels :** notifications à l'heure exacte avec les actions « Pris » et « Reporter de 15 min », reprogrammées après un redémarrage.
+- **Recherche de médicaments :** recherche par nom dans la base officielle, avec mise en cache des résultats sur le téléphone.
+- **Ordonnances :** saisie manuelle ou numérisation d'un document avec reconnaissance de texte sur l'appareil (ML Kit).
+- **Profils familiaux :** un compte, plusieurs personnes, des données séparées.
+- **Français et anglais.**
 
-Accounts and treatments are stored **locally on the device** (Room + encrypted session). The server only provides medicine reference data.
+Les comptes et les traitements sont stockés **localement sur l'appareil** (Room et session chiffrée). Le serveur ne fournit que les données de référence des médicaments.
 
 ## Architecture
 
 ```
-┌────────────────────┐   HTTP/JSON    ┌──────────────────────┐        ┌──────────────┐
-│  android/          │ ─────────────► │  server/  (Ktor)     │ ─────► │  MariaDB     │
-│  Kotlin · MVVM     │  /api/v1/      │  hexagonal:          │        │  active/temp │
-│  Room · WorkManager│  medicament    │  domain · infra · api│        │  archive     │
-│  ML Kit · Ktor     │                │  nightly import jobs │        │  views (RO)  │
-└────────────────────┘                └──────────┬───────────┘        └──────────────┘
-                                                 │ scrape + download
-                                                 ▼
-                                      ANS terminology server (RUIM, SMS)
++--------------------+   HTTP/JSON    +----------------------+        +--------------+
+| android/           | -------------> | server/ (Ktor)       | ---->  | MariaDB      |
+| Kotlin, MVVM       |   /api/v1/     | hexagonal :          |        | active/temp  |
+| Room, WorkManager  |   medicament   | domain, infra, api   |        | archive      |
+| ML Kit, Ktor       |                | imports nocturnes    |        | views (RO)   |
++--------------------+                +-----------+----------+        +--------------+
+                                                  | scraping + téléchargement
+                                                  v
+                                     Serveur de terminologie ANS (RUIM, SMS)
 ```
 
-| Folder | Contents |
+| Dossier | Contenu |
 |---|---|
-| [`android/`](android) | Android app – Kotlin, MVVM, Room, AlarmManager/WorkManager, CameraX/ML Kit. |
-| [`server/`](server) | Ktor 3 REST API (Exposed + HikariCP), CSV importers, scheduled referential updates, Swagger UI. |
-| [`infra/`](infra) | MariaDB schemas, SQL migration runner, example Jenkins pipelines, test dataset. |
+| [`android/`](android) | Application Android : Kotlin, MVVM, Room, AlarmManager/WorkManager, CameraX/ML Kit. |
+| [`server/`](server) | API REST Ktor 3 (Exposed + HikariCP), imports CSV, mises à jour planifiées du référentiel, Swagger UI. |
+| [`infra/`](infra) | Schémas MariaDB, exécuteur de migrations SQL, exemples de pipelines Jenkins, jeu de données de test. |
 
-## Quick start
+## Démarrage rapide
 
-### 1. Run the backend (Docker)
+### 1. Lancer le serveur (Docker)
 
 ```bash
 cd server
-cp .env.example .env      # then fill it in: choose passwords (letters, digits and _ . @ + - only)
+cp .env.example .env      # à remplir : choisir les mots de passe (lettres, chiffres et _ . @ + - uniquement)
 docker compose build
 docker compose up -d mariadb
-docker compose run --rm server import-referentiels   # first import of the ANS data
+docker compose run --rm server import-referentiels   # premier import des données ANS
 docker compose up -d server
 ```
 
-API docs: <http://localhost:4000/swagger> · health check: <http://localhost:4000/health>
+Documentation de l'API : <http://localhost:4000/swagger>. Vérification de santé : <http://localhost:4000/health>.
 
-### 2. Build the Android app
+### 2. Compiler l'application Android
 
-Requirements: JDK 17, Android Studio (SDK 36).
+Prérequis : JDK 17, Android Studio (SDK 36).
 
-Create `android/local.properties`:
+Créer `android/local.properties` :
 
 ```properties
-sdk.dir=C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
-# Server root. Android emulator -> your machine's localhost (the /api/v1/medicament prefix is added by the app)
+sdk.dir=C:\\Users\\<vous>\\AppData\\Local\\Android\\Sdk
+# Racine du serveur. Depuis l'émulateur Android, 10.0.2.2 désigne le localhost de votre machine
+# (le préfixe /api/v1/medicament est ajouté par l'application)
 BASE_URL=http://10.0.2.2:4000
 ```
 
 ```bash
 cd android
-./gradlew assembleDebug        # or open the folder in Android Studio
-./gradlew test                 # unit tests
+./gradlew assembleDebug        # ou ouvrir le dossier dans Android Studio
+./gradlew test                 # tests unitaires
 ```
 
-Use an emulator image **with Google Play** – the document scanner relies on Google Play services.
+Utilisez une image d'émulateur **avec Google Play** : le scanner de documents dépend des services Google Play.
 
-## Security notes
+## Sécurité
 
-- **Database accounts (least privilege).** MariaDB is initialised from `infra/sql/prod`, which creates two accounts:
-  `API_DB_USER` (read-only, `SELECT` on `med_db_views` only) used by the API, and `MARIADB_USER` (import jobs, rights
-  limited to the `active`/`temp`/`archive` databases, no `ALL PRIVILEGES`). The root password stays in the MariaDB
-  container; the API container never receives it. The API container also runs as a non-root user.
-- **Atomic data updates.** The nightly referential update swaps tables with a single `RENAME TABLE` statement, so
-  the API never sees a half-updated database, and an import that is empty or lost more than half of its rows is
-  rejected before it can replace production data. Failures are recorded in `referentiel_import_state`.
-- **API protection.** Per-IP rate limiting (default 120 requests/min, `api.rate-limit.per-minute`), `limit` capped at
-  50, user-typed `%`/`_` treated literally in searches, CORS without credentials, and a `/health` endpoint that
-  really checks the database.
-- **Android.** No cloud backup, private storage for prescription scans (deleted with the prescription), generic
-  lock-screen notifications, PBKDF2-HMAC-SHA256 (600 000 iterations) password hashes with transparent upgrade of old
-  hashes, and no request bodies in release logs.
+- **Comptes de base de données (moindre privilège).** MariaDB est initialisée à partir de `infra/sql/prod`, qui crée deux comptes :
+  `API_DB_USER` (lecture seule, `SELECT` sur `med_db_views` uniquement) utilisé par l'API, et `MARIADB_USER` (tâches d'import,
+  droits limités aux bases `active`, `temp` et `archive`, sans `ALL PRIVILEGES`). Le mot de passe root reste dans le
+  conteneur MariaDB et n'est jamais transmis au conteneur de l'API, qui s'exécute aussi avec un utilisateur non root.
+- **Mises à jour atomiques des données.** La mise à jour nocturne du référentiel échange les tables avec une seule
+  instruction `RENAME TABLE` : l'API ne voit donc jamais une base à moitié mise à jour. Un import vide, ou qui a perdu plus
+  de la moitié de ses lignes, est rejeté avant de remplacer les données de production. Les échecs sont enregistrés dans
+  `referentiel_import_state`.
+- **Protection de l'API.** Limitation de débit par IP (120 requêtes par minute par défaut, `api.rate-limit.per-minute`),
+  paramètre `limit` plafonné à 50, caractères `%` et `_` saisis par l'utilisateur traités littéralement dans les
+  recherches, CORS sans cookies, et un point `/health` qui vérifie réellement la base de données.
+- **Android.** Pas de sauvegarde cloud, stockage privé pour les scans d'ordonnances (supprimés avec l'ordonnance),
+  notifications génériques sur l'écran verrouillé, mots de passe hachés en PBKDF2-HMAC-SHA256 (600 000 itérations) avec mise
+  à niveau transparente des anciens hachages, et aucun corps de requête dans les journaux de la version release.
 
-**Upgrading an existing database:** the account setup only runs on an empty volume. For an existing deployment,
-create the two accounts with the grants from `infra/sql/prod/02_create_db_users.sh`, drop the foreign key on
-`med_substance.code_sms` in `med_db_active` and `med_db_temp` (and `med_db_archive`), and re-run the import.
+**Mise à jour d'une base existante :** la création des comptes ne s'exécute que sur un volume vide. Pour un déploiement
+existant, créez les deux comptes avec les droits définis dans `infra/sql/prod/02_create_db_users.sh`, supprimez la clé
+étrangère sur `med_substance.code_sms` dans `med_db_active` et `med_db_temp` (et `med_db_archive`), puis relancez l'import.
 
-## Known limitations
+## Limites connues
 
-- No hosted instance is provided: search requires you to run the backend yourself.
-- Cleartext HTTP is only permitted for local development hosts; use HTTPS for any real deployment.
-- Behind a reverse proxy, enable Ktor's `XForwardedHeaders` so the rate limit is applied per real client IP.
-- The Room database is not encrypted at rest and the app has no biometric lock (accounts are local to the device).
-- Reminders are rescheduled by a daily WorkManager job; aggressive battery savers can delay them.
-- Substance molecular details (`/substances/detail`) are available again, but the mobile app does not display them.
+- L'instance en ligne `https://vps.denkhar.com` est fournie sans garantie de disponibilité. Pour un usage fiable, hébergez le serveur vous-même.
+- Le HTTP en clair n'est autorisé que pour les hôtes de développement local. Utilisez HTTPS pour tout déploiement réel.
+- Derrière un reverse proxy, le serveur utilise `XForwardedHeaders` pour que la limitation de débit s'applique à l'IP réelle du client.
+- La base Room n'est pas chiffrée au repos et l'application n'a pas de verrouillage biométrique (les comptes sont locaux à l'appareil).
+- Les rappels sont reprogrammés par une tâche WorkManager quotidienne : les modes d'économie de batterie agressifs peuvent les retarder.
+- Les détails moléculaires des substances (`/substances/detail`) sont de nouveau disponibles, mais l'application mobile ne les affiche pas.
 
-## License
+## Licence
 
 [MIT](LICENSE)
