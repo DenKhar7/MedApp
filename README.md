@@ -4,6 +4,19 @@ An Android app to track daily medication, built on top of a self-hostable API se
 
 > **Disclaimer** – MedApp is an educational project, not a medical device. It does not give medical advice. Always follow your doctor's and pharmacist's instructions.
 
+## Try it on your phone
+
+**[⬇ Download the latest APK](https://github.com/DenKhar7/medapp/releases/latest/download/medapp.apk)** · or scan:
+
+<img src="docs/qr-apk.png" alt="QR code to download MedApp" width="160">
+
+- Requires **Android 12 or newer**.
+- Android may show a Play Protect warning ("app not seen from this developer"): tap **More details → Install anyway**. The APK is signed with the project's own key and is not distributed through Google Play.
+- Medicine search talks to the live API at `https://vps.denkhar.com`; accounts and treatments stay on your device.
+- All releases: [GitHub Releases](https://github.com/DenKhar7/medapp/releases).
+
+<!-- Demo video: add here -->
+
 ## What it does
 
 - **Daily checklist & calendar** – see what to take today, and which days were completed or missed.
