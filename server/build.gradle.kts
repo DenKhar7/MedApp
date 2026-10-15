@@ -68,6 +68,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-rate-limit:$ktorVersion") // limitation du débit par client
+    implementation("io.ktor:ktor-server-forwarded-header:$ktorVersion") // IP réelle du client derrière Caddy
 
     // Scraping
     implementation("org.jsoup:jsoup:$jsoupVersion")

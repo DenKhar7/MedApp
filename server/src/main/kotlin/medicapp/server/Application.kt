@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.origin
 import io.ktor.server.plugins.ratelimit.RateLimit
 import kotlin.time.Duration.Companion.seconds
@@ -119,8 +120,10 @@ fun Application.module(
         maxAgeInSeconds = 3600
     }
 
-    // Limitation de débit par adresse IP cliente (derrière un reverse proxy, activer XForwardedHeaders
-    // pour que l'IP réelle du client soit utilisée). Réglable via api.rate-limit.per-minute.
+    // Le serveur n'est joignable que via Caddy (port lié à 127.0.0.1) : X-Forwarded-For est donc fiable.
+    install(XForwardedHeaders)
+
+    // Limitation de débit par adresse IP cliente. Réglable via api.rate-limit.per-minute.
     val rateLimitPerMinute = config.propertyOrNull("api.rate-limit.per-minute")
         ?.getString()?.toIntOrNull()
         ?: DEFAULT_RATE_LIMIT_PER_MINUTE

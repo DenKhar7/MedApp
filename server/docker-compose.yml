@@ -24,8 +24,9 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    # Pas d'exposition publique : seul Caddy (HTTPS) est joignable depuis Internet.
     ports:
-      - "${API_PORT}:${API_PORT}"
+      - "127.0.0.1:${API_PORT}:${API_PORT}"
     networks:
       - backend
     # Variables explicites (et non env_file) : le serveur ne reçoit JAMAIS MARIADB_ROOT_PASSWORD.
@@ -46,8 +47,27 @@ services:
       retries: 3
       start_period: 30s
 
+  # Reverse proxy HTTPS : certificat Let's Encrypt obtenu et renouvelé automatiquement pour API_DOMAIN.
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+      API_PORT: ${API_PORT}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    networks:
+      - backend
+
 volumes:
   mariadb_data:
+  caddy_data:
 
 networks:
   backend:
